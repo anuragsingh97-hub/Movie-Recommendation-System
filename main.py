@@ -75,13 +75,30 @@ tmdb_session.mount("http://", adapter)
 # ============================================================
 
 sentiment_model = None
+sentiment_vectorizer = None
 
-MODEL_FILE = "sentiment_model.pkl"
+MODEL_FILE = "nlp_model.pkl"
+VECTORIZER_FILE = "tranform.pkl"
 
-if os.path.exists(MODEL_FILE):
+if os.path.exists(MODEL_FILE) and os.path.exists(VECTORIZER_FILE):
     try:
         with open(MODEL_FILE, "rb") as file:
             sentiment_model = pickle.load(file)
+
+        with open(VECTORIZER_FILE, "rb") as file:
+            sentiment_vectorizer = pickle.load(file)
+
+        # Models in this repository were created with scikit-learn 0.23.
+        # Newer scikit-learn releases require this fitted-state attribute.
+        tfidf_transformer = getattr(sentiment_vectorizer, "_tfidf", None)
+        if (
+            tfidf_transformer is not None
+            and not hasattr(tfidf_transformer, "n_features_in_")
+            and hasattr(sentiment_vectorizer, "vocabulary_")
+        ):
+            tfidf_transformer.n_features_in_ = len(
+                sentiment_vectorizer.vocabulary_
+            )
 
         print("Sentiment model loaded successfully.")
 
@@ -90,10 +107,11 @@ if os.path.exists(MODEL_FILE):
         print(error)
 
         sentiment_model = None
+        sentiment_vectorizer = None
 
 else:
     print(
-        "WARNING: sentiment_model.pkl not found. "
+        "WARNING: nlp_model.pkl or tranform.pkl not found. "
         "Sentiment analysis will be disabled."
     )
 
@@ -198,11 +216,12 @@ def predict_sentiment(review):
         Unknown
     """
 
-    if sentiment_model is None:
+    if sentiment_model is None or sentiment_vectorizer is None:
         return "Unknown"
 
     try:
-        prediction = sentiment_model.predict([review])[0]
+        review_vector = sentiment_vectorizer.transform([review])
+        prediction = sentiment_model.predict(review_vector)[0]
 
         # Handle numeric labels
         if isinstance(prediction, (int, np.integer, float, np.floating)):
