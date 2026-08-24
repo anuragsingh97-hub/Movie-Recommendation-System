@@ -1,5 +1,6 @@
 import os
 import pickle
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
@@ -14,7 +15,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from dotenv import load_dotenv
 
-from tmdbv3api import TMDb, Movie
+from tmdbv3api import TMDb
 
 
 # ============================================================
@@ -45,6 +46,7 @@ tmdb.api_key = TMDB_API_KEY
 
 TMDB_DETAILS_URL = "https://api.themoviedb.org/3/movie/{}"
 TMDB_REVIEWS_URL = "https://api.themoviedb.org/3/movie/{}/reviews"
+TMDB_SEARCH_URL = "https://api.themoviedb.org/3/search/movie"
 
 IMAGE_BASE_URL = "https://image.tmdb.org/t/p/original"
 
@@ -151,21 +153,34 @@ def get_tmdb_reviews(movie_id):
 
 def search_tmdb_movie(movie_title):
     """
-    Search TMDb for a movie.
+    Search TMDb for a movie using the same retry-enabled session as all
+    other TMDb requests.
     """
-
-    movie_api = Movie()
-
     try:
-        results = movie_api.search(movie_title)
+        response = tmdb_session.get(
+            TMDB_SEARCH_URL,
+            params={
+                "api_key": TMDB_API_KEY,
+                "query": movie_title,
+                "language": "en-US",
+                "page": 1,
+            },
+            timeout=10,
+        )
+        response.raise_for_status()
+        results = response.json().get("results", [])
 
         if not results:
             return None
 
-        return results[0]
+        return SimpleNamespace(**results[0])
 
-    except Exception as error:
-        print("TMDb movie search error:", error)
+    except requests.exceptions.RequestException as error:
+        print("TMDb search request failed:", error)
+        return None
+
+    except (TypeError, ValueError, KeyError) as error:
+        print("TMDb search response was invalid:", error)
         return None
 
 
