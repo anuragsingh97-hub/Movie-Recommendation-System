@@ -20,6 +20,17 @@ A hybrid recommendation system that suggests personalized movies using both **co
 - Pandas, NumPy
 
 ---
+## 📸 Screenshots
+
+### Recommendation Results
+
+![Recommendation System Output](ss_images/search.png)
+
+![Recommendation System Output](ss_images/reviews.png)
+
+![Recommendation System Output](ss_images/recommends.png)
+
+![Recommendation System Output](ss_images/movies.png)
 
 ## Approach
 ### 1) Collaborative Filtering
