@@ -1,151 +1,817 @@
-{% extends 'home.html' %}
 
+{% extends 'home.html' %}
 
 {% block content %}
 
-{% if t=='s' %}
-
-  <div class="movie" style="border-color: #181818;width: 60%;color: #A8A8A8;" >
-    <center><h2>Sorry! This movie is not in our database.</h2>
-    <h2>Please check if you spelled it correct.</h2>
-    <h2>Or try with another movie.</h2></center>
-  </div>
-
-  {% else %}
-
-  	<!-- <div class="list-recommend" style="margin-top: 30px;margin-bottom: 50px;text-align: center;">
-    <ul class="list-group list-group-flush" style="margin-left: auto;margin-right: auto;text-align: center;width: 40%;color: #E8E8E8;">
-      {% for m in r %}
-        <li class="list-group-item" id="movie-title" style="background-color:#e5091485;" onclick="content(this)" title="{{m|title}}"><strong>{{m|title}}</strong></li>
-      {% endfor %}
-    </ul>
-
-</div> -->
 <style>
-  .movie-content {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content:space-around;
-    }
-  .movie-content > div {
-    margin:20px;
-  }
-  #name{
-    color: white;
-  }
-  .card:hover, .poster{
-    -webkit-box-shadow: 0px 1px 15px 4px rgba(250,250,250,1);
-    -moz-box-shadow: 0px 1px 15px 4px rgba(250,250,250,1);
-    box-shadow: 0px 1px 15px 4px rgba(250,250,250,1);
-  }
-  .table td {
-    border-color: white;
-    border-style:solid; 
-    border-width:1px;
-  }
 
-  #mcontent {
-    display: flex;
-    flex-wrap: nowrap;
-  }
-  
-  h6 {
-    margin-bottom: 20px;
-  }
-  @media only screen and (max-width: 650px) {
-    #mcontent {
-      display: block;
+    .recommend-page {
+        width: min(1200px, 92%);
+        margin: 0 auto;
+        padding: 40px 0 80px;
     }
-    .poster-lg {
-      display: none;
-    }
-}
 
-  @media only screen and (min-width: 651px) {
-    .poster-sm {
-      display: none;
+    /* Error / status */
+
+    .message-box {
+        max-width: 750px;
+        margin: 40px auto;
+        padding: 35px;
+        text-align: center;
+        border-radius: 22px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.09);
+        backdrop-filter: blur(15px);
     }
+
+    .message-icon {
+        width: 65px;
+        height: 65px;
+        margin: 0 auto 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(229,9,20,0.12);
+        color: #ff4b55;
+        font-size: 25px;
+    }
+
+    .message-box h2 {
+        font-size: 22px;
+        margin-bottom: 10px;
+    }
+
+    .message-box p {
+        color: #9699a5;
+        line-height: 1.6;
+    }
+
+    /* Movie Header */
+
+    .movie-heading {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .movie-heading .small-title {
+        color: #ff4c56;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+    }
+
+    .movie-heading h2 {
+        font-size: clamp(30px, 5vw, 48px);
+        line-height: 1.1;
+        font-weight: 800;
+        letter-spacing: -1.5px;
+    }
+
+    /* Movie Details */
+
+    .movie-details {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 45px;
+        padding: 30px;
+        border-radius: 28px;
+        border: 1px solid rgba(255,255,255,0.09);
+        background:
+            linear-gradient(
+                135deg,
+                rgba(255,255,255,0.07),
+                rgba(255,255,255,0.025)
+            );
+        box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+        backdrop-filter: blur(18px);
+    }
+
+    .poster-container {
+        position: relative;
+    }
+
+    .main-poster {
+        width: 100%;
+        max-width: 300px;
+        aspect-ratio: 2 / 3;
+        object-fit: cover;
+        border-radius: 20px;
+        display: block;
+        box-shadow:
+            0 25px 60px rgba(0,0,0,0.55);
+        transition: 0.4s ease;
+    }
+
+    .main-poster:hover {
+        transform: scale(1.02);
+    }
+
+    .details-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .rating-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 22px;
+        flex-wrap: wrap;
+    }
+
+    .rating {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 13px;
+        border-radius: 10px;
+        background: rgba(245,197,24,0.12);
+        color: #f5c518;
+        font-weight: 700;
+        font-size: 14px;
+    }
+
+    .rating i {
+        font-size: 13px;
+    }
+
+    .status {
+        padding: 8px 13px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.07);
+        color: #b7bac5;
+        font-size: 13px;
+    }
+
+    .overview {
+        color: #b2b4bf;
+        line-height: 1.8;
+        font-size: 15px;
+        margin-bottom: 25px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(150px, 1fr));
+        gap: 12px;
+    }
+
+    .info-item {
+        padding: 15px;
+        border-radius: 13px;
+        background: rgba(0,0,0,0.18);
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .info-label {
+        display: block;
+        color: #777b88;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 6px;
+    }
+
+    .info-value {
+        color: #eeeeef;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    /* Section */
+
+    .section {
+        margin-top: 65px;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 25px;
+    }
+
+    .section-title {
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+
+    .section-title i {
+        color: #e50914;
+        margin-right: 8px;
+    }
+
+    .section-subtitle {
+        color: #737681;
+        font-size: 13px;
+    }
+
+    /* Reviews */
+
+    .reviews-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 17px;
+    }
+
+    .review-card {
+        padding: 22px;
+        border-radius: 17px;
+        background: rgba(255,255,255,0.045);
+        border: 1px solid rgba(255,255,255,0.08);
+        transition: 0.3s ease;
+    }
+
+    .review-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(255,255,255,0.16);
+        background: rgba(255,255,255,0.065);
+    }
+
+    .review-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+    }
+
+    .review-user {
+        color: #dddfe5;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .sentiment {
+        font-size: 12px;
+        font-weight: 700;
+        padding: 6px 9px;
+        border-radius: 8px;
+    }
+
+    .sentiment.good {
+        color: #50e39c;
+        background: rgba(80,227,156,0.10);
+    }
+
+    .sentiment.bad {
+        color: #ff6971;
+        background: rgba(255,105,113,0.10);
+    }
+
+    .review-text {
+        color: #9699a5;
+        font-size: 13px;
+        line-height: 1.7;
+        margin: 0;
+    }
+
+    .review-preview {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 4;
+        overflow: hidden;
+    }
+
+    .review-preview.expanded {
+        display: block;
+    }
+
+    .review-toggle {
+        background: none;
+        border: 0;
+        color: #e50914;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 700;
+        margin-top: 12px;
+        padding: 0;
+        outline: none;
+    }
+
+
+    /* Recommendations */
+
+    .recommendations {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 18px;
+    }
+
+    .recommend-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 17px;
+        background: #111218;
+        border: 1px solid rgba(255,255,255,0.08);
+        cursor: pointer;
+        transition: 0.35s ease;
+    }
+
+    .recommend-card:hover {
+        transform: translateY(-8px);
+        border-color: rgba(229,9,20,0.45);
+        box-shadow: 0 20px 45px rgba(0,0,0,0.4);
+    }
+
+    .recommend-poster {
+        width: 100%;
+        aspect-ratio: 2 / 3;
+        object-fit: cover;
+        display: block;
+        transition: 0.4s ease;
+    }
+
+    .recommend-card:hover .recommend-poster {
+        transform: scale(1.04);
+    }
+
+    .recommend-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            to top,
+            rgba(0,0,0,0.95),
+            transparent 65%
+        );
+        pointer-events: none;
+    }
+
+    .recommend-title {
+        position: absolute;
+        left: 14px;
+        right: 14px;
+        bottom: 14px;
+        color: white;
+        font-size: 14px;
+        line-height: 1.3;
+        font-weight: 700;
+        z-index: 2;
+    }
+
+    /* Empty */
+
+    .empty-reviews {
+        text-align: center;
+        padding: 50px 20px;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .empty-reviews i {
+        color: #626570;
+        font-size: 35px;
+        margin-bottom: 15px;
+    }
+
+    .empty-reviews h3 {
+        margin-bottom: 8px;
+    }
+
+    .empty-reviews p {
+        color: #747783;
+        font-size: 13px;
+    }
+
+    /* Responsive */
+
+    @media (max-width: 1000px) {
+
+        .recommendations {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+    }
+
+    @media (max-width: 750px) {
+
+        .movie-details {
+            grid-template-columns: 1fr;
+            gap: 25px;
+            padding: 20px;
+        }
+
+        .poster-container {
+            display: flex;
+            justify-content: center;
+        }
+
+        .main-poster {
+            width: 250px;
+        }
+
+        .details-content {
+            text-align: center;
+        }
+
+        .rating-row {
+            justify-content: center;
+        }
+
+        .info-grid {
+            text-align: left;
+        }
+
+        .reviews-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .recommendations {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .section-header {
+            display: block;
+        }
+
+        .section-subtitle {
+            margin-top: 7px;
+        }
+
+    }
+
+    @media (max-width: 450px) {
+
+        .recommend-page {
+            width: 94%;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .recommendations {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .recommend-title {
+            font-size: 12px;
+        }
+
+    }
+
 </style>
 
-<center>
-    <h2 id="name" class="text-uppercase">{{result.title}}</h2>
-  </center>
-  <br/>
-  <div id="mycontent">
-    <div id="mcontent">
-      <div class="poster-lg">
-        <img class="poster" style="border-radius: 40px;margin-left: 90px;" height="400" width="250" src = {{ img_path }}>
-      </div>
-      <div class="poster-sm text-center">
-        <img class="poster" style="border-radius: 40px;margin-bottom: 5%;" height="400" width="250" src = {{ img_path }}>
-      </div>
 
-      <div style="margin-left: 50px">
-        <br/>
-        <h6 id="title" style="color:white;">TITLE: &nbsp;{{result.title}}</h6>
-        <h6 id="overview" style="color:white;max-width: 85%">OVERVIEW: <br/><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{result.overview}}</h6>
-        <!-- <h6 id="popularity" style="color:white;">POPULARITY: &nbsp;{{result.popularity}}</h6> -->
-        <h6 id="vote_average" style="color:white;">RATING: &nbsp;{{result.vote_average}}/10 ({{vote_count}} votes)</h6>
-        <h6 id="genres" style="color:white;">GENRE: &nbsp;{{genres}}</h6>
-        <h6 id="date" style="color:white;">RELEASE DATE: &nbsp;{{release_date}}</h6>
-        <h6 id="runtime" style="color:white;">RUNTIME: &nbsp;{{runtime}}</h6>
-        <h6 id="status" style="color:white;">STATUS: &nbsp;{{status}}</h6>
-      </div>
-    </div>
-  </div>
-  <br/>
-  <center>
-    {% if reviews %}
-    <h2 style="color:white">USER REVIEWS</h2>
-     <div class="col-md-12" style="margin: 0 auto; margin-top:25px;">
-            <table class="table table-bordered" bordercolor="white" style="color:white">
-                <thead>
-                    <tr>
-                        <th class="text-center" scope="col" style="width: 75%">Comments</th>
-                        <th class="text-center" scope="col">Sentiments</th>
-                    </tr>
-                </thead>
-        
-                <tbody>
-          {% for review, status in reviews.items() if not reviews.hidden %}
-          <tr style="background-color:#e5091485;">
-                  <td>{{review}}</td>
-                  <td><center>
-                      {{status}} : 
-                      {% if status =='Good' %}
-                        &#128515;
-                      {% else %}
-                        &#128534;
-                      {% endif %}
-                    </center>
-                  </td>
-              </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+<div class="recommend-page">
+
+    {% if t == 's' %}
+
+        <!-- Movie not found -->
+
+        <div class="message-box">
+
+            <div class="message-icon">
+                <i class="fa-solid fa-film-circle-xmark"></i>
+            </div>
+
+            <h2>Movie Not Found</h2>
+
+            <p>
+                We couldn't find
+                <strong>{{ movie }}</strong>
+                in our movie database.
+                Try checking the spelling or search for another movie.
+            </p>
+
+        </div>
+
+
+    {% elif t == 'e' %}
+
+        <!-- API Error -->
+
+        <div class="message-box">
+
+            <div class="message-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+
+            <h2>Something went wrong</h2>
+
+            <p>{{ message }}</p>
+
+        </div>
+
+
     {% else %}
-    <div style="color:white;">
-      <h1 style="color:white"> This movie is not released yet. Stay tuned! </h1>
-    </div>
+
+        <!-- Movie Details -->
+
+        <div class="movie-heading" id="movie-result">
+
+            <div class="small-title">
+                <i class="fa-solid fa-circle-play"></i>
+                Movie Details
+            </div>
+
+            <h2>{{ result.title }}</h2>
+
+        </div>
+
+
+        <div class="movie-details">
+
+            <!-- Poster -->
+
+            <div class="poster-container">
+
+                <img
+                    class="main-poster"
+                    src="{{ img_path }}"
+                    alt="{{ result.title }} poster"
+                >
+
+            </div>
+
+
+            <!-- Information -->
+
+            <div class="details-content">
+
+                <div class="rating-row">
+
+                    <div class="rating">
+                        <i class="fa-solid fa-star"></i>
+                        {{ result.vote_average }}/10
+                    </div>
+
+                    <div class="status">
+                        {{ status }}
+                    </div>
+
+                </div>
+
+
+                <p class="overview">
+                    {{ result.overview }}
+                </p>
+
+
+                <div class="info-grid">
+
+                    <div class="info-item">
+
+                        <span class="info-label">
+                            <i class="fa-solid fa-tags"></i>
+                            Genre
+                        </span>
+
+                        <span class="info-value">
+                            {{ genres }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                        <span class="info-label">
+                            <i class="fa-solid fa-calendar"></i>
+                            Release Date
+                        </span>
+
+                        <span class="info-value">
+                            {{ release_date }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                        <span class="info-label">
+                            <i class="fa-solid fa-clock"></i>
+                            Runtime
+                        </span>
+
+                        <span class="info-value">
+                            {{ runtime }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                        <span class="info-label">
+                            <i class="fa-solid fa-users"></i>
+                            Votes
+                        </span>
+
+                        <span class="info-value">
+                            {{ vote_count }}
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Reviews -->
+
+        <section class="section">
+
+            <div class="section-header">
+
+                <div>
+                    <div class="section-title">
+                        <i class="fa-solid fa-comments"></i>
+                        User Reviews
+                    </div>
+
+                    <div class="section-subtitle">
+                        Sentiment analysis powered by machine learning
+                    </div>
+                </div>
+
+            </div>
+
+
+            {% if reviews %}
+
+                <div class="reviews-grid">
+
+                    {% for review, status in reviews.items() if not reviews.hidden %}
+
+                        <article class="review-card">
+
+                            <div class="review-top">
+
+                                <div class="review-user">
+                                    <i class="fa-solid fa-user"></i>
+                                    Movie Viewer
+                                </div>
+
+                                {% if status == 'Good' %}
+
+                                    <div class="sentiment good">
+                                        <i class="fa-solid fa-face-smile"></i>
+                                        Positive
+                                    </div>
+
+                                {% else %}
+
+                                    <div class="sentiment bad">
+                                        <i class="fa-solid fa-face-frown"></i>
+                                        Negative
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <p class="review-text review-preview">{{ review }}</p>
+                            <button class="review-toggle" type="button" aria-expanded="false">
+                                Read full review
+                            </button>
+
+                        </article>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-reviews">
+
+                    <i class="fa-solid fa-comments"></i>
+
+                    <h3>No Reviews Available</h3>
+
+                    <p>
+                        There are currently no user reviews available
+                        for this movie.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+
+        <!-- Recommendations -->
+
+        <section class="section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <div class="section-title">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        Recommended For You
+                    </div>
+
+                    <div class="section-subtitle">
+                        Movies similar to {{ result.title }}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            {% if offline %}
+
+                <div class="message-box">
+
+                    <div class="message-icon">
+                        <i class="fa-solid fa-wifi"></i>
+                    </div>
+
+                    <h2>Local Recommendations</h2>
+
+                    <p>
+                        TMDb details and posters are currently unavailable.
+                    </p>
+
+                    <br>
+
+                    <p>
+                        {% for title in mtitle %}
+                            {{ title|title }}
+                            {% if not loop.last %} • {% endif %}
+                        {% endfor %}
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+
+            {% if cards %}
+
+                <div class="recommendations">
+
+                    {% for poster, title in cards.items() if not cards.hidden %}
+
+                        <div
+                            class="recommend-card"
+                            onclick="content(this)"
+                            title="{{ title }}"
+                        >
+
+                            <img
+                                class="recommend-poster"
+                                src="{{ poster }}"
+                                alt="{{ title }} poster"
+                                loading="lazy"
+                            >
+
+                            <div class="recommend-overlay"></div>
+
+                            <div class="recommend-title">
+                                {{ title|title }}
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
     {% endif %}
-  </center>
-<br/>
 
-  <div class="movie" style="color: #E8E8E8;">
-    <center><h3>RECOMMENDED MOVIES FOR YOU</h3></center>
-  </div>
+</div>
 
-  <div class="movie-content">
-    {% for poster, title in cards.items() if not cards.hidden %}
-    <div class="card" style="width: 14rem;" onclick="content(this)" title="{{title}}">
-      <img class="card-img-top" height="360" width="240" alt="Card image cap" src={{poster}}>
-      <div class="card-body">
-        <h5 class="card-title">{{title|capitalize}}</h5>
-      </div>
-    </div>
-{% endfor %}
-  </div>
-  {% endif %}
+<script>
+document.querySelectorAll('.review-toggle').forEach((button) => {
+    button.addEventListener('click', () => {
+        const preview = button.previousElementSibling;
+        const expanded = preview.classList.toggle('expanded');
+        button.setAttribute('aria-expanded', expanded);
+        button.textContent = expanded ? 'Show less' : 'Read full review';
+    });
+});
+
+// After a search, move the visitor directly to the returned movie details.
+window.addEventListener('load', () => {
+    const movieResult = document.getElementById('movie-result');
+    if (movieResult) {
+        setTimeout(() => {
+            movieResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
+    }
+});
+</script>
 
 {% endblock %}
+```
