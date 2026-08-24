@@ -885,15 +885,11 @@ def page_not_found(error):
 # ============================================================
 # START APPLICATION
 # ============================================================
-
 if __name__ == "__main__":
-
     print("=" * 60)
     print("Movie Recommendation System")
     print("=" * 60)
     print("Open: http://127.0.0.1:5000")
     print("=" * 60)
 
-    app.run(
-        debug=True
-    )
+    app.run(debug=False)
