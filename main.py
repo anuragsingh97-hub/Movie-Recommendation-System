@@ -121,7 +121,8 @@ else:
 # ============================================================
 
 data = None
-similarity_matrix = None
+recommendation_vectorizer = None
+recommendation_matrix = None
 
 
 # ============================================================
@@ -261,11 +262,16 @@ def predict_sentiment(review):
 
 def create_similarity_matrix():
     """
-    Create movie similarity matrix from main_data.csv.
+    Load the sparse movie-feature matrix from main_data.csv.
+
+    Do not build an all-movies similarity matrix here.  At 6,000 movies that
+    dense array uses hundreds of megabytes and can cause a small Render worker
+    to be terminated while processing its first search request.
     """
 
     global data
-    global similarity_matrix
+    global recommendation_vectorizer
+    global recommendation_matrix
 
     data = pd.read_csv("main_data.csv")
 
@@ -293,13 +299,13 @@ def create_similarity_matrix():
         .astype(str)
     )
 
-    vectorizer = CountVectorizer()
+    recommendation_vectorizer = CountVectorizer()
 
-    count_matrix = vectorizer.fit_transform(data["comb"])
+    recommendation_matrix = recommendation_vectorizer.fit_transform(
+        data["comb"]
+    )
 
-    similarity_matrix = cosine_similarity(count_matrix)
-
-    print("Recommendation model loaded.")
+    print("Recommendation data loaded.")
     print("Movies:", len(data))
 
 
@@ -309,9 +315,9 @@ def rcmd(movie_title):
     """
 
     global data
-    global similarity_matrix
+    global recommendation_matrix
 
-    if data is None or similarity_matrix is None:
+    if data is None or recommendation_matrix is None:
         create_similarity_matrix()
 
     movie_title = movie_title.strip().lower()
@@ -329,9 +335,14 @@ def rcmd(movie_title):
         data["movie_title"] == movie_title
     ][0]
 
-    scores = list(
-        enumerate(similarity_matrix[movie_index])
-    )
+    # Calculate similarities for this one movie only.  This produces the same
+    # recommendation ranking without retaining a 6009 x 6009 dense matrix.
+    similarities = cosine_similarity(
+        recommendation_matrix[movie_index],
+        recommendation_matrix
+    ).ravel()
+
+    scores = list(enumerate(similarities))
 
     scores = sorted(
         scores,
