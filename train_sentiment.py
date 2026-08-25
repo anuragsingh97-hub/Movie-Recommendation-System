@@ -7,6 +7,7 @@ Run with the project virtual environment:
 from pathlib import Path
 import pickle
 
+
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import accuracy_score
